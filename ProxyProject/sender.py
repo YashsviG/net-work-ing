@@ -22,6 +22,11 @@ def makePacket(data, ackN, seqN) -> Packet:
     packet = Packet(packet_type, src_port, dest_port, ack_no, seq_no, data)
     return packet
 
+def waitForEvent():
+    time.sleep(5)
+    #  if timer timeout and reaches here and 
+    # if dont have any ack then we resend the same pkt else send next packet
+
 def sendData(client, data) -> None:
     
     ack = 0
@@ -30,7 +35,9 @@ def sendData(client, data) -> None:
     to = 1023
     
     canSend = True
-    if canSend: 
+    sendPacket = True
+    recvAck = False
+    if sendPacket and canSend: 
         # GET DATA
         pkt_data = getData(data, frm, to)
 
@@ -40,11 +47,14 @@ def sendData(client, data) -> None:
         # SEND PACKET 
         client.send(pkt)
         canSend = False
+        recvAck = True
+        
 
-    # need to calculate how much is an idea time to wait for the ack
-    time.sleep(5)
+    # need to calculate how much is an idea time to wait for the ack and use it
+    
+    waitForEvent()
 
-    if not canSend:
+    if not canSend and recvAck:
         response = client.rec(SIZE).decode(FORMAT)
         if response.ack_no == ack + 1 and response.seq_no == seq:
             canSend = True
