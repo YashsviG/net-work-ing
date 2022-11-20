@@ -130,3 +130,5 @@ dmypy.json
 
 
 /ProxyProject/.idea
+
+.DS_Store
