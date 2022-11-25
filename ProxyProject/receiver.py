@@ -4,7 +4,7 @@ import argparse
 from packet import Packet, PacketType
 
 PORT = 5000
-SIZE = 1024
+SIZE = 4096
 FORMAT = 'utf-8'
 
 """
@@ -31,7 +31,7 @@ def makePacket(addr, recv_info, ack, seq) -> Packet:
 
 def get_packets(conn, addr, recv_info) -> list[Packet]:
     packets = []
-    seq = 1
+    seq = 0
     while True:
         packet = pickle.loads(conn.recv(SIZE))
         print(f"[PACKET RECEIVED] {packet}\n")
@@ -39,7 +39,7 @@ def get_packets(conn, addr, recv_info) -> list[Packet]:
         if packet.get_packet_type() == PacketType.EOF.name:
             print(f"[EOF DETECTED] Closing connection")
             break
-        ack = 0 if packet.get_seq() == 0 else 1
+        ack = packet.get_seq()
         ackpack = makePacket(addr, recv_info, ack, seq)
         print(f"[Sending ACK] {ackpack}")
         conn.send(pickle.dumps(ackpack))
