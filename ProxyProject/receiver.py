@@ -1,62 +1,50 @@
-from genericpath import exists
+import pickle
 import socket
 import argparse
-import os
-import re as regex
-import Packet
+from packet import Packet, PacketType
 
 PORT = 5000
 SIZE = 1024
 FORMAT = 'utf-8'
 
-'''
+"""
 Gets the IP of the server machine
 
 :return: Returns the IP
-'''
-def getIP():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.settimeout(0)
-    try:
-        sock.connect(('10.254.254.254', 80))
-        IP = sock.getsockname()[0]
-    except Exception:
-        IP = '127.0.0.1'
-    finally:
-        sock.close()
-    return IP
+"""
 
-def makePacket(data, ackN, seqN) -> Packet:
-    packet_type = 'ack'
-    src_port = 5000
-    dest_port = 5000
-    ack_no = ackN
-    seq_no = seqN
-    data = data
-    packet = Packet(packet_type, src_port, dest_port, ack_no, seq_no, data)
+
+def get_ip_address():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
+    return ip
+
+
+def makePacket(addr, recv_info, ack, seq) -> Packet:
+    ack_no = ack
+    seq_no = seq
+    packet = Packet(PacketType.ACK, recv_info[0], addr[0], recv_info[1], addr[1], ack_no, seq_no)
     return packet
 
-'''
-Copies the file name and its data to the specified directory.
 
-:param conn: This is the connection setup to receive the sent data.
-:param directory: This is the directory in which the file is needed to be created.
-:param clientIP: This is the IP of the client machine.
-'''
-def sendAck(conn):
-    pkt_data = "received packet"
+def get_packets(conn, addr, recv_info) -> list[Packet]:
+    packets = []
+    seq = 1
     while True:
-        packet = conn.recv(SIZE).decode(FORMAT)
-        data = packet.data
-        ack = packet.ack_no
-        seq = packet.seq_no
-        
-        print("DATA RECIEVED:" + data)
-        
-        pkt = makePacket(pkt_data, ack+1, seq)
-        
-        conn.send(pkt)
-
+        packet = pickle.loads(conn.recv(SIZE))
+        print(f"[PACKET RECEIVED] {packet}\n")
+        packets.append(packet)
+        if packet.get_packet_type() == PacketType.EOF.name:
+            print(f"[EOF DETECTED] Closing connection")
+            break
+        ack = 0 if packet.get_seq() == 0 else 1
+        ackpack = makePacket(addr, recv_info, ack, seq)
+        print(f"[Sending ACK] {ackpack}")
+        conn.send(pickle.dumps(ackpack))
+        seq = 1 if seq == 0 else 0
+    return packets
 
 '''
 This is main of the program.
@@ -64,32 +52,31 @@ Parses the command line arguements and creates a socket to start the server.
 :raise KeyboardInterrupted: Shuts the server down.
 :raise Exception: Shuts the server down.
 '''
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', type=int, default=PORT, dest='PORT')
+    parser.add_argument('-p', type=int, default=PORT, dest='port')
     args = parser.parse_args()
-    
+    ip = get_ip_address()
+    recv_info = (ip, args.port)
 
-    IP = getIP()    
-    ADDR = (IP, args.PORT if (args.PORT) else PORT)
-
-    print(f'Starting Server on {ADDR}')
+    print(f'Starting Server on {recv_info}')
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(ADDR)
-    server.listen(5)
+    server.bind(recv_info)
+    server.listen()
 
     interrupted = False
     try:
-        while not interrupted:
-            conn, addr = server.accept()
-            cIP = addr[0]
-            sendAck(conn)
+        conn, addr = server.accept()
+        packets = get_packets(conn, addr, recv_info)
+        conn.close()
     except KeyboardInterrupt as keyError:
         print(f'\nShutting Server - {repr(keyError)}')
         assert not interrupted
-    except Exception as e:
-        print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
-        assert not interrupted
+    # except Exception as e:
+    #     print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
+    #     assert not interrupted
 
 
 if __name__ == '__main__':
