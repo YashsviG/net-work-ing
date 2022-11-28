@@ -36,14 +36,16 @@ def get_packets(conn, addr, recv_info) -> list[Packet]:
         packet = pickle.loads(conn.recv(SIZE))
         print(f"[PACKET RECEIVED] {packet}\n")
         packets.append(packet)
-        if packet.get_packet_type() == PacketType.EOF.name:
-            print(f"[EOF DETECTED] Closing connection")
-            break
+        
         ack = packet.get_seq()
         ackpack = makePacket(addr, recv_info, ack, seq)
         print(f"[Sending ACK] {ackpack}")
         conn.send(pickle.dumps(ackpack))
         seq = 1 if seq == 0 else 0
+
+        if packet.get_packet_type() == PacketType.EOF.name:
+            print(f"[EOF DETECTED] Closing connection")
+            break
     return packets
 
 '''
@@ -69,14 +71,14 @@ def main():
     interrupted = False
     try:
         conn, addr = server.accept()
-        packets = get_packets(conn, addr, recv_info)
+        get_packets(conn, addr, recv_info)
         conn.close()
     except KeyboardInterrupt as keyError:
         print(f'\nShutting Server - {repr(keyError)}')
         assert not interrupted
-    # except Exception as e:
-    #     print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
-    #     assert not interrupted
+    except Exception as e:
+        print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
+        assert not interrupted
 
 
 if __name__ == '__main__':

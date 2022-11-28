@@ -65,35 +65,41 @@ def sendPackets(packets, conn):
             else:
                 if ack.get_ack() == expected_ack:
                     break
+                elif p.get_packet_type() == PacketType.EOF.name:
+                    conn.close()
+                    break
                 else:
                     print(f"[DUPLICATE ACK DETECTED]{ack}")
-            finally:
-                if p.get_packet_type() == PacketType.EOF.name:
-                    break
+           
         expected_ack = 1 if expected_ack == 0 else 0
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', type=str, dest='IP', required=True)
+    parser.add_argument('-s', type=str, dest='IP', required=True) #Should be taking the proxy's IP address no the server directly
     parser.add_argument('-p', type=int, default=PORT, dest='PORT')
+    
     args = parser.parse_args()
     addr = (args.IP, args.PORT)
+    
     interrupted = False
     try:
         print(f'Starting Client on {addr}')
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(addr)
+        
         client.settimeout(TIMEOUT)
+        
         data = input('Enter file name or a string:')
+        
         packets = getPacketList(data, addr, client.getsockname())
         sendPackets(packets, client)
     except KeyboardInterrupt as keyError:
         print(f'\nShutting Server - {repr(keyError)}')
         assert not interrupted
-    # except Exception as e:
-    #     print(f'\nAn Exception Occured. Shutting Client - {repr(e)}')
-    #     assert not interrupted
+    except Exception as e:
+        print(f'\nAn Exception Occured. Shutting Client - {repr(e)}')
+        assert not interrupted
 
 
 if __name__ == '__main__':
