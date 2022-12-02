@@ -8,6 +8,10 @@ PORT = 5000
 SIZE = 4096
 FORMAT = 'utf-8'
 
+# GUI DATA
+data_packets_dropped = []
+ack_packets_dropped = []
+
 """
 Gets the IP of the server machine
 
@@ -66,6 +70,7 @@ def main():
 
     interrupted = False
     
+    
     try:
         dataNoise = input('Enter rate to drop data packets at: \n')
         ackNoise = input('Enter rate to drop ack packets at: \n')
@@ -73,11 +78,14 @@ def main():
         conn, addr = proxyReceiver.accept()
 
         while True:
+            print("hello?")
             dataPacket = get_packet(conn)
             while True:
                 if not drop_packet(dataNoise):
+                    data_packets_dropped.append(0) # GUI
                     break
                 else:
+                    data_packets_dropped.append(1) # GUI
                     print('DATA PACKET DROPPED')
                     dataPacket = get_packet(conn)
 
@@ -85,14 +93,20 @@ def main():
 
             ackPacket = get_packet(proxySender)
             if not drop_packet(ackNoise):
+                ack_packets_dropped.append(0) # GUI
                 conn.send(pickle.dumps(ackPacket))
             
             else:
+                ack_packets_dropped.append(1) # GUI
                 print('ACK PACKET DROPPED')
             if dataPacket.get_packet_type() == PacketType.EOF.name:
                 print(f"[EOF DETECTED] Closing connection")
                 break
         
+        # GUI
+        print(data_packets_dropped)
+        print(ack_packets_dropped)
+
         conn.close()
 
     except KeyboardInterrupt as keyError:
