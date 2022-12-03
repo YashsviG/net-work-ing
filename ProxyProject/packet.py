@@ -34,6 +34,9 @@ class Packet:
 
     def get_packet_type(self):
         return self.packet['packet_type'].name
+    
+    def get_data(self):
+        return self.packet['data']
 
     def __repr__(self):
         return f"packet: Ack: {self.packet['ack_no']}, data_len: {len(self.packet['data'])}"

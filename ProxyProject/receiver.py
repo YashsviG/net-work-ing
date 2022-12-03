@@ -7,6 +7,8 @@ PORT = 5000
 SIZE = 4096
 FORMAT = 'utf-8'
 
+countPacketRecvd = 0
+countPacketSent = 0
 """
 Gets the IP of the server machine
 
@@ -30,22 +32,41 @@ def makePacket(addr, recv_info, ack, seq) -> Packet:
 
 
 def get_packets(conn, addr, recv_info) -> list[Packet]:
+    global countPacketSent
+    global countPacketRecvd
+
     packets = []
     seq = 0
+    ack = 1
     while True:
         packet = pickle.loads(conn.recv(SIZE))
-        print(f"[PACKET RECEIVED] {packet}\n")
-        packets.append(packet)
+        countPacketRecvd += 1
+        print(f"[{packet.get_packet_type()} PACKET RECEIVED] {packet}\n")
         
-        ack = packet.get_seq()
-        ackpack = makePacket(addr, recv_info, ack, seq)
-        print(f"[Sending ACK] {ackpack}")
-        conn.send(pickle.dumps(ackpack))
-        seq = 1 if seq == 0 else 0
-
         if packet.get_packet_type() == PacketType.EOF.name:
             print(f"[EOF DETECTED] Closing connection")
             break
+        
+        newAck = packet.get_seq()
+        if not ack == newAck:
+            ack = newAck
+            packets.append(packet.get_data())
+            ackpack = makePacket(addr, recv_info, ack, seq)
+            
+            print(f"[Sending ACK] {ackpack}")
+            conn.send(pickle.dumps(ackpack))
+            countPacketSent += 1
+        else:
+            print("DUPLICATE DATA PACKET DETECTED")
+            print(f"[Sending DUP ACK] {ackpack}")
+            conn.send(pickle.dumps(ackpack))
+            countPacketSent += 1
+
+        seq = 1 if seq == 0 else 0
+
+        
+
+   
     return packets
 
 '''
@@ -57,6 +78,9 @@ Parses the command line arguements and creates a socket to start the server.
 
 
 def main():
+    global countPacketRecvd
+    global countPacketSent
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', type=int, default=PORT, dest='port')
     args = parser.parse_args()
@@ -72,6 +96,10 @@ def main():
     try:
         conn, addr = server.accept()
         get_packets(conn, addr, recv_info)
+
+        print({"Recvd": countPacketRecvd})
+        print({"Sent": countPacketSent})
+
         conn.close()
     except KeyboardInterrupt as keyError:
         print(f'\nShutting Server - {repr(keyError)}')
