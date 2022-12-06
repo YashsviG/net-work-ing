@@ -11,8 +11,16 @@ import numpy
 
 class GUI:
     def __init__(self) -> None:
-        ack = 0
-        data = 0
+        ack = []
+        data = []
+        title = ''
+    
+    def update_ack(self, data): 
+        self.ack.append(data)
+    
+
+    def update_data(self, data): 
+        self.data.append(data)
 
     def format_data(self, dropped_packets):
         array = []
@@ -22,11 +30,6 @@ class GUI:
             array.append(total - dropped)
             total -= dropped
         return array
-
-    def update_ack # this is to update the values in init
-    def update_data
-
-
 
     def main(self):
         timestamps = numpy.arange(10)
