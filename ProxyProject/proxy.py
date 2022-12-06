@@ -16,16 +16,17 @@ ack_packets_dropped = []
 
 countPacketRecvd = 0
 countPacketSent = 0
-"""
-Gets the IP of the server machine
 
-:return: Returns the IP
-"""
-
-def get_drop_delay(data):
+def get_drop_delay(data) -> int:
     f=open("config.json", "r")
     f=json.loads(f)
-    return f[data]
+    return int(f[data])
+
+"""
+Gets the IP of the machine        
+
+:return: Returns the IP address of the machine    
+"""
 
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -34,7 +35,12 @@ def get_ip_address():
     s.close()
     return ip
 
+"""
+Calculates the chances of delaying the data or ack packet
 
+:param noise: percent rate to delay the packet.
+:return: Boolean to either delay or not delay the packet
+"""
 def delay_packet(noise) -> bool:
     delay = False
 
@@ -44,7 +50,12 @@ def delay_packet(noise) -> bool:
 
     return delay
 
+"""
+Calculates the chances of dropping the data or ack packet
 
+:param noise: percent rate to drop the packet.
+:return: Boolean to either drop or not drop the packet
+"""
 def drop_packet(noise) -> bool:
     drop = False
 
@@ -54,6 +65,12 @@ def drop_packet(noise) -> bool:
 
     return drop
 
+"""
+Receives the packet from the receiver and the sender
+
+:param conn: socket connection to receive data on
+:return: lists of packets received
+"""
 def get_packet(conn) -> list[Packet]:
     global countPacketRecvd
 
@@ -63,6 +80,13 @@ def get_packet(conn) -> list[Packet]:
         countPacketRecvd += 1
         return packet
 
+"""
+Sends the packet to the receiver and the sender
+
+:param proxySender: socket connection to send data on
+:param dataPacket: 
+:return: lists of packets received
+"""
 def send_packet(proxySender, dataPacket):
     global countPacketSent
     proxySender.send(pickle.dumps(dataPacket))
