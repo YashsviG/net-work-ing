@@ -1,4 +1,6 @@
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from random import randrange
 import numpy
 
 # TODO: 
@@ -12,7 +14,7 @@ class GUI:
         ack = 0
         data = 0
 
-    def format_data(dropped_packets):
+    def format_data(self, dropped_packets):
         array = []
         total = len(dropped_packets)
         array.append(total)
@@ -24,18 +26,18 @@ class GUI:
     def update_ack # this is to update the values in init
     def update_data
 
-    
 
-    def main():
+
+    def main(self):
         timestamps = numpy.arange(10)
         print(timestamps)
     
         test_data = [0, 0, 1, 0, 0, 1, 0, 1, 1]
-        data = format_data(test_data)
+        data = self.format_data(test_data)
         print(data)
     
         test_acks = [0, 1, 0, 1, 1, 0, 1, 0, 1]
-        acks = format_data(test_acks)
+        acks = self.format_data(test_acks)
         print(acks)    
     
         fig, axs = plt.subplots(2)
