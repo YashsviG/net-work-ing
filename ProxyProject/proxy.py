@@ -4,6 +4,7 @@ import argparse
 from packet import Packet, PacketType
 from random import randrange
 import time
+import json
 
 PORT = 5000
 SIZE = 4096
@@ -21,6 +22,10 @@ Gets the IP of the server machine
 :return: Returns the IP
 """
 
+def get_drop_delay(data):
+    f=open("config.json", "r")
+    f=json.loads(f)
+    return f[data]
 
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -48,16 +53,6 @@ def drop_packet(noise) -> bool:
         drop = True
 
     return drop
-
-# TODO: NEED TO VALIDATE USER INPUTS 
-def get_user_data():
-    dataNoise = input('Enter rate to drop data packets at: \n')
-    ackNoise = input('Enter rate to drop ack packets at: \n')
-    delayDataPacket = input('Enter rate to delay data packets at: \n')
-    delayAckPacket = input('Enter rate to delay ack packets at: \n')
-
-    return (dataNoise, ackNoise, delayDataPacket, delayAckPacket)
-
 
 def get_packet(conn) -> list[Packet]:
     global countPacketRecvd
@@ -109,8 +104,6 @@ def main():
     interrupted = False
 
     try:
-        dataNoise, ackNoise, delayDataPacket, delayAckPacket = get_user_data()
-
         conn, addr = proxyReceiver.accept()
 
         while True:
@@ -120,7 +113,7 @@ def main():
                 break
 
             while True:
-                if not drop_packet(dataNoise):
+                if not drop_packet(get_drop_delay("data_packet_drop")):
                     data_packets_dropped.append(0)  # GUI
                     break
                 else:
@@ -128,7 +121,7 @@ def main():
                     print('DATA PACKET DROPPED')
                     dataPacket = get_packet(conn)
 
-            if delay_packet(delayDataPacket):
+            if delay_packet(get_drop_delay("data_packet_delay")):
                 print("DATA PACKED DELAYED")
                 time.sleep(6)
 
@@ -137,9 +130,9 @@ def main():
             # countPacketSent += 1
 
             ackPacket = get_packet(proxySender)
-            if not drop_packet(ackNoise):
+            if not drop_packet(get_drop_delay("ack_packet_drop")):
                 ack_packets_dropped.append(0)  # GUI
-                if delay_packet(delayAckPacket):
+                if delay_packet(get_drop_delay("ack_packet_delay")):
                     print("ACK PACKET DELAYED")
                     time.sleep(6)
 
