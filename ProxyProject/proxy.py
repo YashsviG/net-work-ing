@@ -132,8 +132,7 @@ def main() -> None:
     proxySender = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     proxySender.connect(senderAddr)
 
-    # receiverAddr = (get_ip_address(), args.senderPort)
-    receiverAddr = ("127.0.0.1", args.senderPort)
+    receiverAddr = (get_ip_address(), args.senderPort)
     print(f'Starting Proxy Receiver on {receiverAddr}')
     proxyReceiver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     proxyReceiver.bind(receiverAddr)
