@@ -1,6 +1,6 @@
 {
-    "data_packet_drop": 50, 
+    "data_packet_drop": 50,
     "ack_packet_drop": 0,
-    "data_packet_delay": 50, 
-    "ack_packet_delay": "50"
+    "data_packet_delay": 0,
+    "ack_packet_delay": 50
 }
