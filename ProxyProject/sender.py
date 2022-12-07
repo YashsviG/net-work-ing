@@ -1,4 +1,5 @@
 from os import path
+from GUI import GUI
 from packet import Packet, PacketType
 import socket
 import argparse
@@ -12,6 +13,7 @@ TIMEOUT = 5
 
 countPacketRecvd = 0
 countPacketSent = 0
+
 
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -56,7 +58,7 @@ def getPacketList(string, addr, src_port):
     return packets
 
 
-def sendPackets(packets, conn):
+def sendPackets(packets, conn, gui):
     global countPacketSent
     global countPacketRecvd
 
@@ -66,7 +68,6 @@ def sendPackets(packets, conn):
             print(f"[SENDING {p.get_packet_type()} PACKET] {p}")
             conn.send(pickle.dumps(p))
             countPacketSent += 1
-
             if p.get_packet_type() == PacketType.EOF.name:
                 print(f"[EOF DETECTED] Closing connection")
                 break
@@ -75,14 +76,15 @@ def sendPackets(packets, conn):
                 countPacketRecvd += 1
             except socket.timeout:
                 print("[TIMEOUT DETECTED]")
+                gui.update_data(0)
                 pass
             else:
                 if ack.get_ack() == expected_ack:
+                    gui.update_data(1)
                     break
-                
                 else:
+                    gui.update_data(0)
                     print(f"[DUPLICATE ACK DETECTED]{ack}")
-           
         expected_ack = 1 if expected_ack == 0 else 0
 
 
@@ -96,7 +98,8 @@ def main() -> None:
     
     args = parser.parse_args()
     addr = (args.IP, args.PORT)
-    
+
+    gui = GUI("Number of Packets sent", "Unique Packets Sent", "Sender Summary")
     interrupted = False
     try:
         print(f'Starting Client on {addr}')
@@ -108,17 +111,17 @@ def main() -> None:
         data = input('Enter file name or a string:')
         
         packets = getPacketList(data, addr, client.getsockname())
-        sendPackets(packets, client)
-        
+        sendPackets(packets, client, gui)
         print({"Recvd": countPacketRecvd})
         print({"Sent": countPacketSent})
         client.close()
+        gui.draw()
     except KeyboardInterrupt as keyError:
         print(f'\nShutting Server - {repr(keyError)}')
         assert not interrupted
-    except Exception as e:
-        print(f'\nAn Exception Occured. Shutting Client - {repr(e)}')
-        assert not interrupted
+    # except Exception as e:
+    #     print(f'\nAn Exception Occured. Shutting Client - {repr(e)}')
+    #     assert not interrupted
 
 
 if __name__ == '__main__':

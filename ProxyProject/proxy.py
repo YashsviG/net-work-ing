@@ -1,6 +1,8 @@
 import pickle
 import socket
 import argparse
+
+from GUI import GUI, draw
 from packet import Packet, PacketType
 from random import randrange
 import time
@@ -17,16 +19,19 @@ ack_packets_dropped = []
 countPacketRecvd = 0
 countPacketSent = 0
 
+
 def get_drop_delay(data) -> int:
-    f=open("config.json", "r")
-    f=json.loads(f)
+    f = open("config.json", "r")
+    f = json.load(f)
     return int(f[data])
+
 
 """
 Gets the IP of the machine        
 
 :return: Returns the IP address of the machine    
 """
+
 
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -35,12 +40,15 @@ def get_ip_address():
     s.close()
     return ip
 
+
 """
 Calculates the chances of delaying the data or ack packet
 
 :param noise: percent rate to delay the packet.
 :return: Boolean to either delay or not delay the packet
 """
+
+
 def delay_packet(noise) -> bool:
     delay = False
 
@@ -50,12 +58,15 @@ def delay_packet(noise) -> bool:
 
     return delay
 
+
 """
 Calculates the chances of dropping the data or ack packet
 
 :param noise: percent rate to drop the packet.
 :return: Boolean to either drop or not drop the packet
 """
+
+
 def drop_packet(noise) -> bool:
     drop = False
 
@@ -65,13 +76,16 @@ def drop_packet(noise) -> bool:
 
     return drop
 
+
 """
 Receives the packet from the receiver and the sender
 
 :param conn: socket connection to receive data on
 :return: lists of packets received
 """
-def get_packet(conn) -> list[Packet]:
+
+
+def get_packet(conn):
     global countPacketRecvd
 
     while True:
@@ -80,6 +94,7 @@ def get_packet(conn) -> list[Packet]:
         countPacketRecvd += 1
         return packet
 
+
 """
 Sends the packet to the receiver and the sender
 
@@ -87,11 +102,13 @@ Sends the packet to the receiver and the sender
 :param dataPacket: 
 :return: lists of packets received
 """
+
+
 def send_packet(proxySender, dataPacket):
     global countPacketSent
     proxySender.send(pickle.dumps(dataPacket))
     countPacketSent += 1
-      
+
 
 '''
 This is main of the program.
@@ -126,50 +143,48 @@ def main():
     proxyReceiver.listen()
 
     interrupted = False
-
+    ack_gui = GUI("Number of Acks Received", "ACKs Dropped", "Proxy Summary")
+    data_gui = GUI("Number of Data Received", "Data packet Dropped", "")
+    gui_list = [ack_gui, data_gui]
     try:
         conn, addr = proxyReceiver.accept()
 
         while True:
-            dataPacket = get_packet(conn)
-            if dataPacket.get_packet_type() == PacketType.EOF.name:
+            data_packet = get_packet(conn)
+            if data_packet.get_packet_type() == PacketType.EOF.name:
                 print(f"[EOF DETECTED] Closing connection")
                 break
 
             while True:
                 if not drop_packet(get_drop_delay("data_packet_drop")):
-                    data_packets_dropped.append(0)  # GUI
                     break
                 else:
-                    data_packets_dropped.append(1)  # GUI
+                    data_gui.update_data(1)
                     print('DATA PACKET DROPPED')
-                    dataPacket = get_packet(conn)
-
+                    data_packet = get_packet(conn)
             if delay_packet(get_drop_delay("data_packet_delay")):
                 print("DATA PACKED DELAYED")
                 time.sleep(6)
+            data_gui.update_data(0)
 
-            send_packet(proxySender, dataPacket)
-            # proxySender.send(pickle.dumps(dataPacket))
-            # countPacketSent += 1
+            send_packet(proxySender, data_packet)
 
             ackPacket = get_packet(proxySender)
             if not drop_packet(get_drop_delay("ack_packet_drop")):
-                ack_packets_dropped.append(0)  # GUI
                 if delay_packet(get_drop_delay("ack_packet_delay")):
                     print("ACK PACKET DELAYED")
                     time.sleep(6)
-
+                ack_gui.update_data(0)
                 conn.send(pickle.dumps(ackPacket))
                 countPacketSent += 1
 
             else:
-                ack_packets_dropped.append(1)  # GUI
+                ack_gui.update_data(1)
                 print('ACK PACKET DROPPED')
-        
+
         # to send EOF
-        send_packet(proxySender, dataPacket)
-   
+        send_packet(proxySender, data_packet)
+
         # GUI
         print(data_packets_dropped)
         print(ack_packets_dropped)
@@ -178,14 +193,14 @@ def main():
         print({"Sent": countPacketSent})
 
         conn.close()
-
+        draw(gui_list)
     except KeyboardInterrupt as keyError:
         print(f'\nShutting Server - {repr(keyError)}')
         assert not interrupted
 
-    except Exception as e:
-        print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
-        assert not interrupted
+    # except Exception as e:
+    #     print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
+    #     assert not interrupted
 
 
 if __name__ == '__main__':

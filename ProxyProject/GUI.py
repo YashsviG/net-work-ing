@@ -1,63 +1,42 @@
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-from random import randrange
-import numpy
 
-# TODO: 
+
+# TODO:
 # 1. Make a graph for the packets received every iteration for receiver
 # 2. Make a graph for the packets sent every iteration for sender
 # 3. Data Packets dropped or delayed in proxy
 # 4. Ack Packets dropped or delayed in proxy
 
+
 class GUI:
-    def __init__(self) -> None:
-        ack = []
-        data = []
-        title = ''
-    
-    def update_ack(self, data): 
-        self.ack.append(data)
-    
+    def __init__(self, xlabel, ylabel, title) -> None:
+        self.data = [0]
+        self.x = [0]
+        self.x_label = xlabel
+        self.y_label = ylabel
+        self.title = title
+        self.fig = plt.figure()
 
-    def update_data(self, data): 
-        self.data.append(data)
+    def update_data(self, inp):
+        self.data.append(self.data[-1] + inp)
+        if len(self.data) != 1:
+            self.x.append(len(self.data)-1)
 
-    def format_data(self, dropped_packets):
-        array = []
-        total = len(dropped_packets)
-        array.append(total)
-        for dropped in dropped_packets:
-            array.append(total - dropped)
-            total -= dropped
-        return array
-
-    def main(self):
-        timestamps = numpy.arange(10)
-        print(timestamps)
-    
-        test_data = [0, 0, 1, 0, 0, 1, 0, 1, 1]
-        data = self.format_data(test_data)
-        print(data)
-    
-        test_acks = [0, 1, 0, 1, 1, 0, 1, 0, 1]
-        acks = self.format_data(test_acks)
-        print(acks)    
-    
-        fig, axs = plt.subplots(2)
-        fig.suptitle("Packets Being Dropped")
-    
-        # plot graphs
-        axs[0].step(timestamps, data)
-        axs[0].set_title("Data Packets Dropped")
-    
-        axs[0].set_ylim(0, None)
-        axs[0].set_xlim(0, None)
-    
-        axs[1].step(timestamps, data)
-        axs[1].set_title("ACK Packets Dropped")
-    
-        axs[1].set_ylim(0, None)
-        axs[1].set_xlim(0, None)
-    
+    def draw(self):
+        plt.plot(self.x, self.data)
+        plt.title(self.title)
+        plt.ylabel(self.y_label)
+        plt.xlabel(self.x_label)
+        plt.show(block=False)
         plt.show()
 
+
+def draw(plots):
+    for i, p in enumerate(plots):
+        plt.subplot(2, 1, i+1)
+        plt.plot(p.x, p.data)
+        plt.title(p.title)
+        plt.ylabel(p.y_label)
+        plt.xlabel(p.x_label)
+        plt.show(block=False)
+    plt.show()

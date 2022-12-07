@@ -1,6 +1,7 @@
 import pickle
 import socket
 import argparse
+from GUI import GUI
 from packet import Packet, PacketType
 
 PORT = 5000
@@ -31,7 +32,7 @@ def makePacket(addr, recv_info, ack, seq) -> Packet:
     return packet
 
 
-def get_packets(conn, addr, recv_info) -> list[Packet]:
+def get_packets(conn, addr, recv_info, gui) -> list[Packet]:
     global countPacketSent
     global countPacketRecvd
 
@@ -47,26 +48,22 @@ def get_packets(conn, addr, recv_info) -> list[Packet]:
             print(f"[EOF DETECTED] Closing connection")
             break
         
-        newAck = packet.get_seq()
-        if not ack == newAck:
-            ack = newAck
+        new_ack = packet.get_seq()
+        if not ack == new_ack:
+            ack = new_ack
             packets.append(packet.get_data())
             ackpack = makePacket(addr, recv_info, ack, seq)
-            
+            gui.update_data(1)
             print(f"[Sending ACK] {ackpack}")
             conn.send(pickle.dumps(ackpack))
             countPacketSent += 1
         else:
             print("DUPLICATE DATA PACKET DETECTED")
             print(f"[Sending DUP ACK] {ackpack}")
+            gui.update_data(0)
             conn.send(pickle.dumps(ackpack))
             countPacketSent += 1
-
         seq = 1 if seq == 0 else 0
-
-        
-
-   
     return packets
 
 '''
@@ -81,6 +78,7 @@ def main():
     global countPacketRecvd
     global countPacketSent
 
+    gui = GUI("Number of Acks packets sent", "Unique ACKs Sent", "Receiver Summary")
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', type=int, default=PORT, dest='port')
     args = parser.parse_args()
@@ -95,18 +93,19 @@ def main():
     interrupted = False
     try:
         conn, addr = server.accept()
-        get_packets(conn, addr, recv_info)
+        get_packets(conn, addr, recv_info, gui)
 
         print({"Recvd": countPacketRecvd})
         print({"Sent": countPacketSent})
 
         conn.close()
+        gui.draw()
     except KeyboardInterrupt as keyError:
         print(f'\nShutting Server - {repr(keyError)}')
         assert not interrupted
-    except Exception as e:
-        print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
-        assert not interrupted
+    # except Exception as e:
+    #     print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
+    #     assert not interrupted
 
 
 if __name__ == '__main__':
