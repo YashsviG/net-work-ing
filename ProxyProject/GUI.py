@@ -1,13 +1,4 @@
 import matplotlib.pyplot as plt
-
-
-# TODO:
-# 1. Make a graph for the packets received every iteration for receiver
-# 2. Make a graph for the packets sent every iteration for sender
-# 3. Data Packets dropped or delayed in proxy
-# 4. Ack Packets dropped or delayed in proxy
-
-
 class GUI:
     def __init__(self, xlabel, ylabel, title) -> None:
         self.data = [0]
@@ -15,7 +6,7 @@ class GUI:
         self.x_label = xlabel
         self.y_label = ylabel
         self.title = title
-        self.fig = plt.figure()
+        self.fig = plt.gcf()
 
     def update_data(self, inp):
         self.data.append(self.data[-1] + inp)

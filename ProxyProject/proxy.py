@@ -8,16 +8,30 @@ from random import randrange
 import time
 import json
 
+"""
+INITIALIZING GLOBAL VARIABLES
+"""
 PORT = 5000
 SIZE = 4096
 FORMAT = 'utf-8'
 
-# GUI DATA
-data_packets_dropped = []
-ack_packets_dropped = []
-
 countPacketRecvd = 0
 countPacketSent = 0
+
+
+
+
+"""
+Gets the IP of the proxy machine        
+
+:return: Returns the IP address of the machine    
+"""
+def get_ip_address() -> str:
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
+    return ip
 
 """
 Gets the data from the config json based on the key provided
@@ -29,20 +43,6 @@ def get_drop_delay(key) -> int:
     f = open("config.json", "r")
     f = json.load(f)
     return int(f[key])
-
-
-"""
-Gets the IP of the machine        
-
-:return: Returns the IP address of the machine    
-"""
-def get_ip_address():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    ip = s.getsockname()[0]
-    s.close()
-    return ip
-
 
 """
 Calculates the chances of delaying the data or ack packet
@@ -82,9 +82,7 @@ Receives the packet from the receiver and the sender
 :param conn: socket connection to receive data on
 :return: lists of packets received
 """
-
-
-def get_packet(conn):
+def get_packet(conn) -> Packet:
     global countPacketRecvd
 
     while True:
@@ -95,15 +93,13 @@ def get_packet(conn):
 
 
 """
-Sends the packet to the receiver and the sender
+Sends the packet to the receiver
 
 :param proxySender: socket connection to send data on
 :param dataPacket: 
 :return: lists of packets received
 """
-
-
-def send_packet(proxySender, dataPacket):
+def send_packet(proxySender, dataPacket) -> None:
     global countPacketSent
     proxySender.send(pickle.dumps(dataPacket))
     countPacketSent += 1
@@ -111,13 +107,14 @@ def send_packet(proxySender, dataPacket):
 
 '''
 This is main of the program.
-Parses the command line arguements and creates a socket to start the server.
+Parses the command line arguements and creates a socket to start the proxy receiver 
+and the sender and calls the functions appropriately to drop/delay packets received 
+on the sockets and lists the stats at the end.
+
 :raise KeyboardInterrupted: Shuts the server down.
 :raise Exception: Shuts the server down.
 '''
-
-
-def main():
+def main() -> None:
     global countPacketSent
     global countPacketRecvd
 
@@ -185,21 +182,20 @@ def main():
         # to send EOF
         send_packet(proxySender, data_packet)
 
-        print("===============================")
+        print("===================EOT===================")
         print("STATS - PROXY")
         print({"Count of Packets received": countPacketRecvd})
         print({"Counts of Packets sent": countPacketSent})
-        print("===============================")
+        print("===================EOT===================")
 
         conn.close()
         draw(gui_list)
     except KeyboardInterrupt as keyError:
         print(f'\nShutting Server - {repr(keyError)}')
         assert not interrupted
-
-    # except Exception as e:
-    #     print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
-    #     assert not interrupted
+    except Exception as e:
+        print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
+        assert not interrupted
 
 
 if __name__ == '__main__':
