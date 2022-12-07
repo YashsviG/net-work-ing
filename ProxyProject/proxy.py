@@ -19,11 +19,16 @@ ack_packets_dropped = []
 countPacketRecvd = 0
 countPacketSent = 0
 
+"""
+Gets the data from the config json based on the key provided
 
-def get_drop_delay(data) -> int:
+:param key: key to retrieve data from the config file
+:return: int - drop/delay rate for the key
+"""
+def get_drop_delay(key) -> int:
     f = open("config.json", "r")
     f = json.load(f)
-    return int(f[data])
+    return int(f[key])
 
 
 """
@@ -31,8 +36,6 @@ Gets the IP of the machine
 
 :return: Returns the IP address of the machine    
 """
-
-
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
@@ -47,8 +50,6 @@ Calculates the chances of delaying the data or ack packet
 :param noise: percent rate to delay the packet.
 :return: Boolean to either delay or not delay the packet
 """
-
-
 def delay_packet(noise) -> bool:
     delay = False
 
@@ -65,8 +66,6 @@ Calculates the chances of dropping the data or ack packet
 :param noise: percent rate to drop the packet.
 :return: Boolean to either drop or not drop the packet
 """
-
-
 def drop_packet(noise) -> bool:
     drop = False
 
@@ -123,6 +122,7 @@ def main():
     global countPacketRecvd
 
     parser = argparse.ArgumentParser()
+    
     # Should be taking the server's IP address
     parser.add_argument('-s', type=str, dest='recvIP', required=True)
     parser.add_argument('-rp', type=int, default=PORT, dest='receiverPort')
@@ -185,12 +185,11 @@ def main():
         # to send EOF
         send_packet(proxySender, data_packet)
 
-        # GUI
-        print(data_packets_dropped)
-        print(ack_packets_dropped)
-
-        print({"Recvd": countPacketRecvd})
-        print({"Sent": countPacketSent})
+        print("===============================")
+        print("STATS - PROXY")
+        print({"Count of Packets received": countPacketRecvd})
+        print({"Counts of Packets sent": countPacketSent})
+        print("===============================")
 
         conn.close()
         draw(gui_list)

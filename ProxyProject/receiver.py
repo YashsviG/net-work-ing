@@ -95,17 +95,20 @@ def main():
         conn, addr = server.accept()
         get_packets(conn, addr, recv_info, gui)
 
-        print({"Recvd": countPacketRecvd})
-        print({"Sent": countPacketSent})
+        print("===============================")
+        print("STATS - RECEIVER")
+        print({"Count of Packets received": countPacketRecvd})
+        print({"Counts of Packets sent": countPacketSent})
+        print("===============================")
 
         conn.close()
         gui.draw()
     except KeyboardInterrupt as keyError:
         print(f'\nShutting Server - {repr(keyError)}')
         assert not interrupted
-    # except Exception as e:
-    #     print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
-    #     assert not interrupted
+    except Exception as e:
+        print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
+        assert not interrupted
 
 
 if __name__ == '__main__':

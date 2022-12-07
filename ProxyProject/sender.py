@@ -93,7 +93,9 @@ def main() -> None:
     global countPacketRecvd
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', type=str, dest='IP', required=True) #Should be taking the proxy's IP address no the server directly
+    parser.add_argument('-s', type=str, dest='IP', required=True) 
+    
+    #Should be taking the proxy's IP address no the server directly
     parser.add_argument('-p', type=int, default=PORT, dest='PORT')
     
     args = parser.parse_args()
@@ -112,16 +114,21 @@ def main() -> None:
         
         packets = getPacketList(data, addr, client.getsockname())
         sendPackets(packets, client, gui)
-        print({"Recvd": countPacketRecvd})
-        print({"Sent": countPacketSent})
+
+        print("===============================")
+        print("STATS - SENDER")
+        print({"Count of Packets received": countPacketRecvd})
+        print({"Counts of Packets sent": countPacketSent})
+        print("===============================")
+
         client.close()
         gui.draw()
     except KeyboardInterrupt as keyError:
         print(f'\nShutting Server - {repr(keyError)}')
         assert not interrupted
-    # except Exception as e:
-    #     print(f'\nAn Exception Occured. Shutting Client - {repr(e)}')
-    #     assert not interrupted
+    except Exception as e:
+        print(f'\nAn Exception Occured. Shutting Client - {repr(e)}')
+        assert not interrupted
 
 
 if __name__ == '__main__':
