@@ -119,9 +119,21 @@ def main() -> None:
         conn.close()
         gui.draw()
     except KeyboardInterrupt as keyError:
+        print("===================EOT===================")
+        print("STATS - RECEIVER")
+        print({"Count of Packets received": countOfPacketRecvd})
+        print({"Counts of Packets sent": countOfPacketSent})
+        print("===================EOT===================")
+        gui.draw()
         print(f'\nShutting Server - {repr(keyError)}')
         assert not interrupted
     except Exception as e:
+        print("===================EOT===================")
+        print("STATS - RECEIVER")
+        print({"Count of Packets received": countOfPacketRecvd})
+        print({"Counts of Packets sent": countOfPacketSent})
+        print("===================EOT===================")
+        gui.draw()
         print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
         assert not interrupted
 
