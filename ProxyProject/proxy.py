@@ -104,6 +104,13 @@ def send_packet(proxySender, dataPacket) -> None:
     proxySender.send(pickle.dumps(dataPacket))
     countPacketSent += 1
 
+def show_stats(gui_list):
+    print("===================EOT===================")
+    print("STATS - PROXY")
+    print({"Count of Packets received": countPacketRecvd})
+    print({"Counts of Packets sent": countPacketSent})
+    print("===================EOT===================")
+    draw(gui_list)
 
 '''
 This is main of the program.
@@ -132,7 +139,7 @@ def main() -> None:
     proxySender = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     proxySender.connect(senderAddr)
 
-    receiverAddr = (get_ip_address(), args.senderPort)
+    receiverAddr = ('127.0.0.1', args.senderPort)
     print(f'Starting Proxy Receiver on {receiverAddr}')
     proxyReceiver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     proxyReceiver.bind(receiverAddr)
@@ -181,30 +188,15 @@ def main() -> None:
         # to send EOF
         send_packet(proxySender, data_packet)
 
-        print("===================EOT===================")
-        print("STATS - PROXY")
-        print({"Count of Packets received": countPacketRecvd})
-        print({"Counts of Packets sent": countPacketSent})
-        print("===================EOT===================")
-
+        
         conn.close()
-        draw(gui_list)
+        show_stats(gui_list)
     except KeyboardInterrupt as keyError:
-        print("===================EOT===================")
-        print("STATS - PROXY")
-        print({"Count of Packets received": countPacketRecvd})
-        print({"Counts of Packets sent": countPacketSent})
-        print("===================EOT===================")
-        draw(gui_list)
+        show_stats(gui_list)
         print(f'\nShutting Server - {repr(keyError)}')
         assert not interrupted
     except Exception as e:
-        print("===================EOT===================")
-        print("STATS - PROXY")
-        print({"Count of Packets received": countPacketRecvd})
-        print({"Counts of Packets sent": countPacketSent})
-        print("===================EOT===================")
-        draw(gui_list)
+        show_stats(gui_list)
         print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
         assert not interrupted
 

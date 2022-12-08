@@ -116,6 +116,12 @@ def sendPackets(packets, conn, gui) -> None:
                     print(f"[DUPLICATE ACK DETECTED]{ack}")
         expected_ack = 1 if expected_ack == 0 else 0
 
+def show_stats(gui):
+    print("===================EOT===================")
+    print({"Count of Packets received": countPacketRecvd})
+    print({"Counts of Packets sent": countPacketSent})
+    print("===================EOT===================")
+    gui.draw()
 '''
 This is main of the program.
 Parses the command line arguements and creates a socket to start the sender.
@@ -149,30 +155,14 @@ def main() -> None:
         packets = getPacketList(data, addr, client.getsockname())
         sendPackets(packets, client, gui)
 
-        print("===================EOT===================")
-        print("STATS - SENDER")
-        print({"Count of Packets received": countPacketRecvd})
-        print({"Counts of Packets sent": countPacketSent})
-        print("===================EOT===================")
-
+        show_stats(gui)
         client.close()
-        gui.draw()
     except KeyboardInterrupt as keyError:
-        print("===================EOT===================")
-        print("STATS - SENDER")
-        print({"Count of Packets received": countPacketRecvd})
-        print({"Counts of Packets sent": countPacketSent})
-        print("===================EOT===================")
-        gui.draw()
+        show_stats(gui)
         print(f'\nShutting Server - {repr(keyError)}')
         assert not interrupted
     except Exception as e:
-        print("===================EOT===================")
-        print("STATS - SENDER")
-        print({"Count of Packets received": countPacketRecvd})
-        print({"Counts of Packets sent": countPacketSent})
-        print("===================EOT===================")
-        gui.draw()
+        show_stats(gui)
         print(f'\nAn Exception Occured. Shutting Client - {repr(e)}')
         assert not interrupted
 

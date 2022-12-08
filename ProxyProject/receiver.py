@@ -83,6 +83,13 @@ def get_packets(conn, addr, recv_info, gui) -> list[Packet]:
             countOfPacketSent += 1
         seq = 1 if seq == 0 else 0
     return packets
+def show_stats(gui):
+    print("===================EOT===================")
+    print("STATS - RECEIVER")
+    print({"Count of Packets received": countOfPacketRecvd})
+    print({"Counts of Packets sent": countOfPacketSent})
+    print("===================EOT===================")
+    gui.draw()
 
 '''
 This is main of the program.
@@ -111,29 +118,15 @@ def main() -> None:
         conn, addr = server.accept()
         get_packets(conn, addr, recv_info, gui)
 
-        print("===================EOT===================")
-        print("STATS - RECEIVER")
-        print({"Count of Packets received": countOfPacketRecvd})
-        print({"Counts of Packets sent": countOfPacketSent})
-        print("===================EOT===================")
+
         conn.close()
-        gui.draw()
+        show_stats(gui)
     except KeyboardInterrupt as keyError:
-        print("===================EOT===================")
-        print("STATS - RECEIVER")
-        print({"Count of Packets received": countOfPacketRecvd})
-        print({"Counts of Packets sent": countOfPacketSent})
-        print("===================EOT===================")
-        gui.draw()
+        show_stats(gui)
         print(f'\nShutting Server - {repr(keyError)}')
         assert not interrupted
     except Exception as e:
-        print("===================EOT===================")
-        print("STATS - RECEIVER")
-        print({"Count of Packets received": countOfPacketRecvd})
-        print({"Counts of Packets sent": countOfPacketSent})
-        print("===================EOT===================")
-        gui.draw()
+        show_stats(gui)
         print(f'\nAn Exception Occured. Shutting Server - {repr(e)}')
         assert not interrupted
 
