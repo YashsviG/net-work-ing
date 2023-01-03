@@ -13,3 +13,5 @@ We achieve lossy network program by implementing a Send-And-Wait protocol. The p
 - Python 3
 
 ## Screenshots
+  <img width="889" alt="Screen Shot 2023-01-03 at 12 09 47 PM" src="https://user-images.githubusercontent.com/45160510/210310298-9b0da9e8-c488-425e-9b65-044eb9a70449.png">
+<img width="889" alt="Screen Shot 2023-01-03 at 12 10 53 PM" src="https://user-images.githubusercontent.com/45160510/210310409-d8463d96-3dca-4403-8ec5-32e01c8e1a41.png">
